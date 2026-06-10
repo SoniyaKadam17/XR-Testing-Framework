@@ -1,0 +1,8 @@
+{
+    "name": "high_load",
+    "users": 100,
+    "fps": 90,
+    "bitrate_mbps": 50,
+    "tracking_rate": 120,
+    "session_duration": 300
+}

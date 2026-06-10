@@ -1,0 +1,8 @@
+{
+    "name": "medium_load",
+    "users": 25,
+    "fps": 60,
+    "bitrate_mbps": 15,
+    "tracking_rate": 90,
+    "session_duration": 300
+}

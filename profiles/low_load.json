@@ -1,0 +1,8 @@
+{
+    "name": "low_load",
+    "users": 5,
+    "fps": 30,
+    "bitrate_mbps": 5,
+    "tracking_rate": 60,
+    "session_duration": 300
+}

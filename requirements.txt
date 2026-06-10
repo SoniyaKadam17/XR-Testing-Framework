@@ -1,0 +1,7 @@
+numpy
+pandas
+matplotlib
+scapy
+loguru
+aiohttp
+websockets
