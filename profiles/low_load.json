@@ -2,7 +2,8 @@
     "name": "low_load",
     "users": 5,
     "fps": 30,
-    "bitrate_mbps": 5,
+    "bitrate_mbps": 10,
     "tracking_rate": 60,
+    "packet_size": 512,
     "session_duration": 300
 }

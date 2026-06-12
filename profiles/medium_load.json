@@ -1,8 +1,9 @@
 {
     "name": "medium_load",
-    "users": 25,
+    "users": 50,
     "fps": 60,
-    "bitrate_mbps": 15,
+    "bitrate_mbps": 25,
     "tracking_rate": 90,
+    "packet_size": 1024,
     "session_duration": 300
 }

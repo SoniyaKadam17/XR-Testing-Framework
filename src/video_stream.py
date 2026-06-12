@@ -1,21 +1,45 @@
-import numpy as np
-import zlib
+import random
+
 
 class VideoStream:
 
+
+    def __init__(self):
+
+        self.frame_id = 0
+
+
+
     def generate_frame(self):
 
-        frame = np.random.randint(
-            0,
-            255,
-            (720, 1280, 3),
-            dtype=np.uint8
-        )
+        self.frame_id += 1
+
+        # Simulated XR frame
+        frame = {
+
+            "frame_id": self.frame_id,
+
+            "resolution": "4K",
+
+            "codec": "H265"
+
+        }
+
 
         return frame
 
+
+
     def compress_frame(self, frame):
 
-        return zlib.compress(
-            frame.tobytes()
+        # Do NOT actually compress
+        # Just simulate compressed XR data
+
+
+        simulated_size = 5000
+
+
+        return bytes(
+            random.getrandbits(8)
+            for _ in range(simulated_size)
         )
