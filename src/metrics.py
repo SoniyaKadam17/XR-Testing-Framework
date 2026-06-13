@@ -1,4 +1,6 @@
 import time
+import csv
+import os
 
 
 class Metrics:
@@ -6,27 +8,35 @@ class Metrics:
 
     def __init__(self):
 
+        # -----------------------------
+        # Counters
+        # -----------------------------
+
         self.frames_sent = 0
-
         self.events_generated = 0
-
         self.packets_sent = 0
-
         self.bytes_sent = 0
 
 
+        # -----------------------------
         # Latency storage
+        # -----------------------------
 
         self.latencies = []
 
+
+        # -----------------------------
+        # Runtime
+        # -----------------------------
 
         self.start_time = time.time()
 
 
 
-    # -----------------------------
-    # Counters
-    # -----------------------------
+    # =============================
+    # Counter Functions
+    # =============================
+
 
     def increment_frames(self):
 
@@ -52,22 +62,21 @@ class Metrics:
 
 
 
-    # -----------------------------
-    # Latency
-    # -----------------------------
+    # =============================
+    # Latency Functions
+    # =============================
+
 
     def add_latency(self, latency):
 
-        self.latencies.append(
-            latency
-        )
+        # latency is stored in seconds
+        self.latencies.append(latency)
 
 
 
     def get_average_latency(self):
 
         if len(self.latencies) == 0:
-
             return 0
 
 
@@ -81,44 +90,35 @@ class Metrics:
 
     def get_min_latency(self):
 
-        if len(self.latencies)==0:
-
+        if len(self.latencies) == 0:
             return 0
 
 
-        return min(
-            self.latencies
-        ) * 1000
+        return min(self.latencies) * 1000
 
 
 
     def get_max_latency(self):
 
-        if len(self.latencies)==0:
-
+        if len(self.latencies) == 0:
             return 0
 
 
-        return max(
-            self.latencies
-        ) * 1000
+        return max(self.latencies) * 1000
 
 
 
-    # -----------------------------
+    # =============================
     # Bandwidth
-    # -----------------------------
+    # =============================
+
 
     def get_bandwidth(self):
 
-        runtime = (
-            time.time()
-            -
-            self.start_time
-        )
+        runtime = self.get_runtime()
 
 
-        if runtime <=0:
+        if runtime <= 0:
 
             return 0
 
@@ -127,23 +127,95 @@ class Metrics:
 
 
         return (
-            bits/runtime
-        )/1000000
+            bits / runtime
+        ) / 1000000
 
 
 
-    # -----------------------------
-    # Print Metrics
-    # -----------------------------
-
-    def print_metrics(self):
+    # =============================
+    # Runtime
+    # =============================
 
 
-        runtime = (
+    def get_runtime(self):
+
+        return (
             time.time()
             -
             self.start_time
         )
+
+
+
+    # =============================
+    # CSV Logging
+    # =============================
+
+
+    def write_csv(self, filename):
+
+        file_exists = os.path.isfile(filename)
+
+
+        with open(filename, "a", newline="") as file:
+
+
+            writer = csv.writer(file)
+
+
+            if not file_exists:
+
+                writer.writerow(
+                    [
+                        "timestamp",
+                        "frames_sent",
+                        "events_generated",
+                        "packets_sent",
+                        "bytes_sent",
+                        "bandwidth_mbps",
+                        "avg_latency_ms",
+                        "min_latency_ms",
+                        "max_latency_ms"
+                    ]
+                )
+
+
+            writer.writerow(
+                [
+                    time.time(),
+                    self.frames_sent,
+                    self.events_generated,
+                    self.packets_sent,
+                    self.bytes_sent,
+                    round(
+                        self.get_bandwidth(),
+                        3
+                    ),
+                    round(
+                       self.get_average_latency(),
+                        3
+                    ),
+
+                    round(
+                        self.get_min_latency(),
+                        3
+                    ),
+
+                    round(
+                        self.get_max_latency(),
+                        3
+                    )
+                ]
+                )
+
+
+
+    # =============================
+    # Console Output
+    # =============================
+
+
+    def print_metrics(self):
 
 
         print("\n========== METRICS ==========")
@@ -190,7 +262,8 @@ class Metrics:
 
 
         print(
-            f"Runtime: {runtime:.2f} seconds"
+            f"Runtime: {self.get_runtime():.2f} seconds"
         )
+
 
         print("=============================\n")

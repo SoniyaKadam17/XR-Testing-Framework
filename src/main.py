@@ -187,7 +187,9 @@ async def log_metrics():
             "packets_sent",
             "bytes_sent",
             "bandwidth_mbps",
-            "avg_latency_ms"
+            "avg_latency_ms",
+            "min_latency_ms",
+            "max_latency_ms"
         ])
 
         while True:
@@ -202,7 +204,9 @@ async def log_metrics():
                 metrics.packets_sent,
                 metrics.bytes_sent,
                 round(metrics.get_bandwidth(), 3),
-                round(avg, 3)
+                round(metrics.get_average_latency(), 3),
+                round(metrics.get_min_latency(), 3),
+                round(metrics.get_max_latency(), 3)
             ])
 
             file.flush()

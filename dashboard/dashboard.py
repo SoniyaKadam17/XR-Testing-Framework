@@ -3,151 +3,80 @@ import matplotlib.pyplot as plt
 import os
 
 
-# ------------------------------------
-# File Location
-# ------------------------------------
 
-CSV_FILE = "../results/results.csv"
-
-
-# ------------------------------------
-# Load CSV Data
-# ------------------------------------
-
-def load_data():
-
-    if not os.path.exists(CSV_FILE):
-
-        print("result.csv not found")
-
-        exit()
-
-
-    data = pd.read_csv(
-        CSV_FILE
-    )
-
-    return data
+RESULT_FILE = "../results/results.csv"
 
 
 
-# ------------------------------------
-# Convert Timestamp
-# ------------------------------------
+if not os.path.exists(RESULT_FILE):
 
-def process_time(data):
+    print("results.csv not found")
 
-    data["time"] = (
-        data["timestamp"]
-        -
-        data["timestamp"].iloc[0]
-    )
-
-    return data
+    exit()
 
 
 
-# ------------------------------------
+df = pd.read_csv(RESULT_FILE)
+
+
+
+# -----------------------------
 # Bandwidth Graph
-# ------------------------------------
+# -----------------------------
 
-def plot_bandwidth(data):
+def bandwidth_graph():
 
-    plt.figure(figsize=(8,5))
-
+    plt.figure(figsize=(10,5))
 
     plt.plot(
-        data["time"],
-        data["bandwidth_mbps"]
+        df["timestamp"],
+        df["bandwidth_mbps"]
     )
-
-
-    plt.xlabel(
-        "Time (seconds)"
-    )
-
-
-    plt.ylabel(
-        "Bandwidth (Mbps)"
-    )
-
 
     plt.title(
-        "XR Workload Bandwidth Usage"
+        "XR Bandwidth Usage"
     )
 
+    plt.xlabel(
+        "Time"
+    )
 
-    plt.grid()
+    plt.ylabel(
+        "Mbps"
+    )
 
+    plt.grid(True)
 
     plt.savefig(
         "../results/bandwidth.png"
     )
 
-
     plt.close()
 
 
 
-# ------------------------------------
-# Packet Graph
-# ------------------------------------
+# -----------------------------
+# Frames Graph
+# -----------------------------
 
-def plot_packets(data):
+def frames_graph():
 
-    plt.figure(figsize=(8,5))
+    plt.figure(figsize=(10,5))
 
 
     plt.plot(
-        data["time"],
-        data["packets_sent"]
-    )
-
-
-    plt.xlabel(
-        "Time (seconds)"
-    )
-
-
-    plt.ylabel(
-        "Packets Sent"
+        df["timestamp"],
+        df["frames_sent"]
     )
 
 
     plt.title(
-        "XR Packet Transmission Rate"
-    )
-
-
-    plt.grid()
-
-
-    plt.savefig(
-        "../results/packets.png"
-    )
-
-
-    plt.close()
-
-
-
-# ------------------------------------
-# Frames Graph
-# ------------------------------------
-
-def plot_frames(data):
-
-    plt.figure(figsize=(8,5))
-
-
-    plt.plot(
-        data["time"],
-        data["frames_sent"]
+        "XR Frames Generated"
     )
 
 
     plt.xlabel(
-        "Time (seconds)"
+        "Time"
     )
 
 
@@ -156,12 +85,7 @@ def plot_frames(data):
     )
 
 
-    plt.title(
-        "XR Frame Generation"
-    )
-
-
-    plt.grid()
+    plt.grid(True)
 
 
     plt.savefig(
@@ -173,135 +97,286 @@ def plot_frames(data):
 
 
 
-# ------------------------------------
-# Generate Summary
-# ------------------------------------
 
-def generate_summary(data):
+# -----------------------------
+# Packets Graph
+# -----------------------------
+
+def packets_graph():
+
+    plt.figure(figsize=(10,5))
 
 
-    total_frames = (
-        data["frames_sent"]
-        .iloc[-1]
+    plt.plot(
+
+        df["timestamp"],
+
+        df["packets_sent"]
+
     )
 
 
-    total_packets = (
-        data["packets_sent"]
-        .iloc[-1]
+    plt.title(
+        "XR Packets Sent"
     )
 
 
-    total_bytes = (
-        data["bytes_sent"]
-        .iloc[-1]
+    plt.xlabel(
+        "Time"
     )
 
 
-    average_bandwidth = (
-        data["bandwidth_mbps"]
-        .mean()
+    plt.ylabel(
+        "Packets"
     )
 
 
-    peak_bandwidth = (
-        data["bandwidth_mbps"]
-        .max()
-    )
+    plt.grid(True)
 
 
-    print("\n========== XR PERFORMANCE SUMMARY ==========")
-
-
-    print(
-        f"Total Frames: {total_frames}"
-    )
-
-
-    print(
-        f"Total Packets: {total_packets}"
-    )
-
-
-    print(
-        f"Total Data: {total_bytes / (1024*1024):.2f} MB"
-    )
-
-
-    print(
-        f"Average Bandwidth: {average_bandwidth:.2f} Mbps"
-    )
-
-
-    print(
-        f"Peak Bandwidth: {peak_bandwidth:.2f} Mbps"
-    )
-
-
-    print(
-        "============================================"
-    )
-
-
-
-# ------------------------------------
-# Main
-# ------------------------------------
-
-def main():
-
-
-    data = load_data()
-
-
-    data = process_time(
-        data
-    )
-
-
-    plot_bandwidth(
-        data
-    )
-
-
-    plot_packets(
-        data
-    )
-
-
-    plot_frames(
-        data
-    )
-
-
-    generate_summary(
-        data
-    )
-
-
-    print(
-        "\nDashboard generated successfully"
-    )
-
-
-    print(
-        "Generated files:"
-    )
-
-    print(
-        "../results/bandwidth.png"
-    )
-
-    print(
+    plt.savefig(
         "../results/packets.png"
     )
 
-    print(
-        "../results/frames.png"
+
+    plt.close()
+
+
+
+
+# -----------------------------
+# Latency Graph
+# -----------------------------
+
+def latency_graph():
+
+    plt.figure(figsize=(10,5))
+
+
+    plt.plot(
+
+        df["timestamp"],
+
+        df["avg_latency_ms"],
+
+        label="Average"
+
     )
 
 
+    plt.plot(
 
-if __name__ == "__main__":
+        df["timestamp"],
 
-    main()
+        df["min_latency_ms"],
+
+        label="Minimum"
+
+    )
+
+
+    plt.plot(
+
+        df["timestamp"],
+
+        df["max_latency_ms"],
+
+        label="Maximum"
+
+    )
+
+
+    plt.title(
+        "XR Network Latency"
+    )
+
+
+    plt.xlabel(
+        "Time"
+    )
+
+
+    plt.ylabel(
+        "Latency (ms)"
+    )
+
+
+    plt.legend()
+
+
+    plt.grid(True)
+
+
+    plt.savefig(
+        "../results/latency.png"
+    )
+
+
+    plt.close()
+
+
+
+
+# -----------------------------
+# Summary Graph
+# -----------------------------
+
+def summary_graph():
+
+
+    metrics = [
+
+        "Bandwidth Mbps",
+
+        "Avg Latency ms",
+
+        "Total Frames",
+
+        "Total Packets"
+
+    ]
+
+
+    values = [
+
+        df["bandwidth_mbps"].mean(),
+
+        df["avg_latency_ms"].mean(),
+
+        df["frames_sent"].iloc[-1],
+
+        df["packets_sent"].iloc[-1]
+
+    ]
+
+
+
+    plt.figure(figsize=(8,5))
+
+
+    plt.bar(
+
+        metrics,
+
+        values
+
+    )
+
+
+    plt.title(
+        "XR Performance Summary"
+    )
+
+
+    plt.xticks(
+        rotation=30
+    )
+
+
+    plt.grid(True)
+
+
+
+    plt.savefig(
+
+        "../results/summary.png"
+
+    )
+
+
+    plt.close()
+
+
+
+
+# -----------------------------
+# Terminal Summary
+# -----------------------------
+
+print("\n========== XR PERFORMANCE SUMMARY ==========")
+
+
+print(
+    "Total Frames:",
+    df["frames_sent"].iloc[-1]
+)
+
+
+print(
+    "Total Packets:",
+    df["packets_sent"].iloc[-1]
+)
+
+
+print(
+    "Total Data:",
+    round(
+        df["bytes_sent"].iloc[-1]/1024/1024,
+        2
+    ),
+    "MB"
+)
+
+
+print(
+    "Average Bandwidth:",
+    round(
+        df["bandwidth_mbps"].mean(),
+        2
+    ),
+    "Mbps"
+)
+
+
+print(
+    "Average Latency:",
+    round(
+        df["avg_latency_ms"].mean(),
+        2
+    ),
+    "ms"
+)
+
+
+print(
+    "Peak Latency:",
+    round(
+        df["max_latency_ms"].max(),
+        2
+    ),
+    "ms"
+)
+
+
+print(
+    "============================================"
+)
+
+
+
+bandwidth_graph()
+
+frames_graph()
+
+packets_graph()
+
+latency_graph()
+
+summary_graph()
+
+
+
+print("\nDashboard generated successfully")
+
+print(
+"""
+Generated files:
+
+../results/bandwidth.png
+../results/frames.png
+../results/packets.png
+../results/latency.png
+../results/summary.png
+
+"""
+)
