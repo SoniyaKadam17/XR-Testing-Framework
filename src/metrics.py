@@ -3,20 +3,30 @@ import time
 
 class Metrics:
 
+
     def __init__(self):
 
         self.frames_sent = 0
+
         self.events_generated = 0
+
         self.packets_sent = 0
+
         self.bytes_sent = 0
+
+
+        # Latency storage
+
+        self.latencies = []
+
 
         self.start_time = time.time()
 
 
 
-    # ==========================
-    # Frame Counter
-    # ==========================
+    # -----------------------------
+    # Counters
+    # -----------------------------
 
     def increment_frames(self):
 
@@ -24,19 +34,11 @@ class Metrics:
 
 
 
-    # ==========================
-    # Event Counter
-    # ==========================
-
     def increment_events(self):
 
         self.events_generated += 1
 
 
-
-    # ==========================
-    # Packet Counter
-    # ==========================
 
     def increment_packets(self):
 
@@ -44,26 +46,79 @@ class Metrics:
 
 
 
-    # ==========================
-    # Byte Counter
-    # ==========================
-
     def add_bytes(self, size):
 
         self.bytes_sent += size
 
 
 
-    # ==========================
-    # Bandwidth Calculation
-    # ==========================
+    # -----------------------------
+    # Latency
+    # -----------------------------
+
+    def add_latency(self, latency):
+
+        self.latencies.append(
+            latency
+        )
+
+
+
+    def get_average_latency(self):
+
+        if len(self.latencies) == 0:
+
+            return 0
+
+
+        return (
+            sum(self.latencies)
+            /
+            len(self.latencies)
+        ) * 1000
+
+
+
+    def get_min_latency(self):
+
+        if len(self.latencies)==0:
+
+            return 0
+
+
+        return min(
+            self.latencies
+        ) * 1000
+
+
+
+    def get_max_latency(self):
+
+        if len(self.latencies)==0:
+
+            return 0
+
+
+        return max(
+            self.latencies
+        ) * 1000
+
+
+
+    # -----------------------------
+    # Bandwidth
+    # -----------------------------
 
     def get_bandwidth(self):
 
-        elapsed_time = time.time() - self.start_time
+        runtime = (
+            time.time()
+            -
+            self.start_time
+        )
 
 
-        if elapsed_time <= 0:
+        if runtime <=0:
 
             return 0
 
@@ -71,46 +126,68 @@ class Metrics:
         bits = self.bytes_sent * 8
 
 
-        bandwidth_bps = bits / elapsed_time
-
-
-        bandwidth_mbps = bandwidth_bps / 1_000_000
-
-
-        return bandwidth_mbps
+        return (
+            bits/runtime
+        )/1000000
 
 
 
-    # ==========================
-    # Display Metrics
-    # ==========================
+    # -----------------------------
+    # Print Metrics
+    # -----------------------------
 
     def print_metrics(self):
 
-        runtime = time.time() - self.start_time
+
+        runtime = (
+            time.time()
+            -
+            self.start_time
+        )
 
 
         print("\n========== METRICS ==========")
+
 
         print(
             f"Frames Sent: {self.frames_sent}"
         )
 
+
         print(
             f"Events Generated: {self.events_generated}"
         )
+
 
         print(
             f"Packets Sent: {self.packets_sent}"
         )
 
+
         print(
             f"Bytes Sent: {self.bytes_sent}"
         )
 
+
         print(
             f"Bandwidth: {self.get_bandwidth():.3f} Mbps"
         )
+
+
+        print(
+            f"Average Latency: {self.get_average_latency():.2f} ms"
+        )
+
+
+        print(
+            f"Min Latency: {self.get_min_latency():.2f} ms"
+        )
+
+
+        print(
+            f"Max Latency: {self.get_max_latency():.2f} ms"
+        )
+
 
         print(
             f"Runtime: {runtime:.2f} seconds"

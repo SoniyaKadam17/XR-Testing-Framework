@@ -117,9 +117,8 @@ async def xr_user(user_id):
         # Packet Transmission
         # -----------------------------
 
-        packet_generator.send_packet(
-            payload
-        )
+        latency = await packet_generator.send_packet(payload)
+        metrics.add_latency(latency)
 
 
 
@@ -172,56 +171,41 @@ async def print_metrics():
 
 async def log_metrics():
 
-
     with open(
         "../results/results.csv",
         "w",
         newline=""
     ) as file:
 
-
         writer = csv.writer(file)
 
-
-        writer.writerow(
-            [
-                "timestamp",
-                "frames_sent",
-                "events_generated",
-                "packets_sent",
-                "bytes_sent",
-                "bandwidth_mbps"
-            ]
-        )
-
-
+        # header (UPDATED)
+        writer.writerow([
+            "timestamp",
+            "frames_sent",
+            "events_generated",
+            "packets_sent",
+            "bytes_sent",
+            "bandwidth_mbps",
+            "avg_latency_ms"
+        ])
 
         while True:
 
+            # compute latency here
+            avg = metrics.get_average_latency()
 
-            writer.writerow(
-                [
-                    time.time(),
-
-                    metrics.frames_sent,
-
-                    metrics.events_generated,
-
-                    metrics.packets_sent,
-
-                    metrics.bytes_sent,
-
-                    round(
-                        metrics.get_bandwidth(),
-                        3
-                    )
-                ]
-            )
-
+            writer.writerow([
+                time.time(),
+                metrics.frames_sent,
+                metrics.events_generated,
+                metrics.packets_sent,
+                metrics.bytes_sent,
+                round(metrics.get_bandwidth(), 3),
+                round(avg, 3)
+            ])
 
             file.flush()
-
-
             await asyncio.sleep(1)
 
 
