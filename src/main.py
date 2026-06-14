@@ -11,6 +11,11 @@ from metrics import Metrics
 from packet_generator import PacketGenerator
 
 
+# NEW COMPONENT 2 IMPORTS
+from impairment_config import ImpairmentConfig
+from impairment_engine import NetworkImpairmentEngine
+
+
 
 # ==========================================
 # Load XR Profile
@@ -38,6 +43,30 @@ packet_generator = PacketGenerator()
 
 
 # ==========================================
+# NETWORK IMPAIRMENT ENGINE
+# ==========================================
+
+
+network_config = ImpairmentConfig(
+
+    latency_ms=50,
+
+    jitter_ms=10,
+
+    packet_loss_rate=0.02,
+
+    bandwidth_mbps=50
+
+)
+
+
+network = NetworkImpairmentEngine(
+    network_config
+)
+
+
+
+# ==========================================
 # XR USER SIMULATION
 # ==========================================
 
@@ -56,9 +85,6 @@ async def xr_user(user_id):
     while True:
 
 
-        # -----------------------------
-        # Session Duration Check
-        # -----------------------------
 
         runtime = time.time() - start_time
 
@@ -70,7 +96,7 @@ async def xr_user(user_id):
 
 
         # -----------------------------
-        # Tracking Data
+        # Tracking
         # -----------------------------
 
         pose = tracking.generate_pose()
@@ -78,7 +104,7 @@ async def xr_user(user_id):
 
 
         # -----------------------------
-        # User Interaction
+        # User Event
         # -----------------------------
 
         event = behavior.generate_event()
@@ -113,38 +139,91 @@ async def xr_user(user_id):
 
 
 
-        # -----------------------------
-        # Packet Transmission
-        # -----------------------------
-
-        latency = await packet_generator.send_packet(payload)
-        metrics.add_latency(latency)
+        # =================================================
+        # COMPONENT 2 STARTS HERE
+        # =================================================
 
 
+        # Create XR packet object
+
+        packet = {
+
+            "user_id": user_id,
+
+            "timestamp": time.time(),
+
+            "size": packet_size,
+
+            "payload": payload
+
+        }
+
+
+
+        # Send packet through impairment engine
+
+        processed_packet = network.process_packet(
+            packet
+        )
+
+
+
+        # Packet dropped
+
+        if processed_packet is None:
+
+
+            continue
+
+
+
+        # Check packets that finished network delay
+
+        delivered_packets = (
+            network.get_delivered_packets()
+        )
+
+
+
+        for pkt in delivered_packets:
+
+
+            metrics.increment_packets()
+
+
+            metrics.add_bytes(
+                pkt["size"]
+            )
+            # NEW:
+            # Record real network latency
+
+            metrics.add_latency(
+                pkt["actual_latency_ms"]
+            )
+
+
+        # =================================================
+        # COMPONENT 2 END
+        # =================================================
+
+
 
         # -----------------------------
-        # Update Metrics
+        # Existing Metrics
         # -----------------------------
+
 
         metrics.increment_frames()
 
         metrics.increment_events()
 
-        metrics.increment_packets()
 
-        metrics.add_bytes(
-            packet_size
-        )
-
-
-
-        # -----------------------------
-        # Maintain XR FPS
-        # -----------------------------
 
         await asyncio.sleep(
             frame_interval
         )
+
+
 
 
 
@@ -161,7 +240,14 @@ async def print_metrics():
         metrics.print_metrics()
 
 
+        print(
+            network.get_statistics()
+        )
+
+
         await asyncio.sleep(1)
+
+
 
 
 
@@ -171,46 +257,102 @@ async def print_metrics():
 
 async def log_metrics():
 
+
     with open(
         "../results/results.csv",
         "w",
         newline=""
     ) as file:
 
+
         writer = csv.writer(file)
 
-        # header (UPDATED)
+
+
         writer.writerow([
+
             "timestamp",
+
             "frames_sent",
+
             "events_generated",
+
             "packets_sent",
+
             "bytes_sent",
+
             "bandwidth_mbps",
+
             "avg_latency_ms",
+
             "min_latency_ms",
-            "max_latency_ms"
+
+            "max_latency_ms",
+
+            "network_dropped_packets",
+
+            "network_loss_percentage"
+
         ])
+
+
+
 
         while True:
 
-            # compute latency here
-            avg = metrics.get_average_latency()
+
+
+            stats = network.get_statistics()
+
+
 
             writer.writerow([
+
                 time.time(),
+
                 metrics.frames_sent,
+
                 metrics.events_generated,
+
                 metrics.packets_sent,
+
                 metrics.bytes_sent,
-                round(metrics.get_bandwidth(), 3),
-                round(metrics.get_average_latency(), 3),
-                round(metrics.get_min_latency(), 3),
-                round(metrics.get_max_latency(), 3)
+
+                round(
+                    metrics.get_bandwidth(),
+                    3
+                ),
+
+                round(
+                    metrics.get_average_latency(),
+                    3
+                ),
+
+                round(
+                    metrics.get_min_latency(),
+                    3
+                ),
+
+                round(
+                    metrics.get_max_latency(),
+                    3
+                ),
+
+
+                stats["Dropped Packets"],
+
+                stats["Packet Loss %"]
+
             ])
 
+
+
             file.flush()
+
+
             await asyncio.sleep(1)
+
+
 
 
 
@@ -245,16 +387,6 @@ async def main():
 
 
     print(
-        f"Tracking Rate: {profile['tracking_rate']} Hz"
-    )
-
-
-    print(
-        f"Target Bitrate: {profile['bitrate_mbps']} Mbps"
-    )
-
-
-    print(
         "=================================\n"
     )
 
@@ -264,29 +396,20 @@ async def main():
 
 
 
-    # ----------------------------------
-    # Create XR Users
-    # ----------------------------------
-
     for user_id in range(
         profile["users"]
     ):
 
 
-        task = asyncio.create_task(
+        tasks.append(
 
-            xr_user(user_id)
+            asyncio.create_task(
+                xr_user(user_id)
+            )
 
         )
 
 
-        tasks.append(task)
-
-
-
-    # ----------------------------------
-    # Background Monitoring
-    # ----------------------------------
 
     tasks.append(
 
@@ -314,15 +437,15 @@ async def main():
 
 
 
+
 # ==========================================
-# Program Start
+# Start
 # ==========================================
 
 if __name__ == "__main__":
 
 
     try:
-
 
         asyncio.run(main())
 
