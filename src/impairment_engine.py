@@ -152,37 +152,15 @@ class NetworkImpairmentEngine:
 
     def get_delivered_packets(self):
 
-
-        packets = (
-            self.packet_queue.get_ready_packets()
-        )
-
+        packets = self.packet_queue.get_ready_packets()
 
         for packet in packets:
 
-
-            receive_time = time.time()
-
-
-            actual_latency = (
-
-                receive_time
-                -
-                packet["send_time"]
-
-            ) * 1000
-
-
-
-            packet["actual_latency_ms"] = (
-                actual_latency
-            )
-
-
+         # Use the simulated network latency
+        # (configured latency + jitter)
+            packet["actual_latency_ms"] = packet["expected_latency_ms"]
 
             self.delivered_packets += 1
-
-
 
         return packets
 

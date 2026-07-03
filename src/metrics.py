@@ -84,7 +84,7 @@ class Metrics:
             sum(self.latencies)
             /
             len(self.latencies)
-        ) * 1000
+        )
 
 
 
@@ -94,7 +94,7 @@ class Metrics:
             return 0
 
 
-        return min(self.latencies) * 1000
+        return min(self.latencies)
 
 
 
@@ -104,7 +104,7 @@ class Metrics:
             return 0
 
 
-        return max(self.latencies) * 1000
+        return max(self.latencies)
 
 
 

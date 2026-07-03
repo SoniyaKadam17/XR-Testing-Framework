@@ -189,17 +189,8 @@ async def xr_user(user_id):
 
 
             metrics.increment_packets()
-
-
-            metrics.add_bytes(
-                pkt["size"]
-            )
-            # NEW:
-            # Record real network latency
-
-            metrics.add_latency(
-                pkt["actual_latency_ms"]
-            )
+            metrics.add_bytes(pkt["size"])
+            metrics.add_latency(pkt["actual_latency_ms"])
 
 
         # =================================================
