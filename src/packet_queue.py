@@ -23,6 +23,17 @@ class PacketQueue:
         # Stores packets waiting for delivery
         self.queue = deque()
 
+        # =====================================
+        # Component 3: Queue Statistics
+        # =====================================
+
+        self.max_queue_size = 0
+        self.total_queue_size = 0
+        self.queue_samples = 0
+
+        self.total_wait_time = 0
+        self.wait_samples = 0
+
 
 
     def add_packet(self, packet, delivery_time):
@@ -37,13 +48,31 @@ class PacketQueue:
             Future timestamp when packet should arrive
         """
 
-
         # Add delivery timestamp to packet
         packet["delivery_time"] = delivery_time
 
+        # =====================================
+        # Component 3
+        # Store queue entry time
+        # =====================================
+
+        packet["queue_entry_time"] = time.time()
 
         # Insert packet into queue
         self.queue.append(packet)
+
+        # =====================================
+        # Component 3
+        # Queue statistics
+        # =====================================
+
+        current_size = len(self.queue)
+
+        self.total_queue_size += current_size
+        self.queue_samples += 1
+
+        if current_size > self.max_queue_size:
+            self.max_queue_size = current_size
 
 
 
@@ -57,30 +86,33 @@ class PacketQueue:
         current_time >= delivery_time
         """
 
-
         current_time = time.time()
-
 
         delivered_packets = []
 
-
-
         while self.queue:
-
 
             packet = self.queue[0]
 
-
-
             # Packet delay completed
-
             if packet["delivery_time"] <= current_time:
 
+                packet = self.queue.popleft()
 
-                delivered_packets.append(
-                    self.queue.popleft()
-                )
+                # =====================================
+                # Component 3
+                # Queue wait time
+                # =====================================
 
+                wait_time = (
+                    current_time -
+                    packet["queue_entry_time"]
+                ) * 1000
+
+                self.total_wait_time += wait_time
+                self.wait_samples += 1
+
+                delivered_packets.append(packet)
 
             else:
 
@@ -88,8 +120,6 @@ class PacketQueue:
                 # so remaining packets are not ready yet
 
                 break
-
-
 
         return delivered_packets
 
@@ -112,3 +142,52 @@ class PacketQueue:
         """
 
         self.queue.clear()
+
+
+
+    # =====================================
+    # Component 3 Statistics
+    # =====================================
+
+    def average_queue_size(self):
+
+        if self.queue_samples == 0:
+            return 0
+
+        return (
+            self.total_queue_size
+            /
+            self.queue_samples
+        )
+
+
+    def average_wait_time(self):
+
+        if self.wait_samples == 0:
+            return 0
+
+        return (
+            self.total_wait_time
+            /
+            self.wait_samples
+        )
+
+
+    def get_queue_statistics(self):
+
+        return {
+
+            "Current Queue Size": self.size(),
+
+            "Average Queue Size": round(
+                self.average_queue_size(),
+                2
+            ),
+
+            "Maximum Queue Size": self.max_queue_size,
+
+            "Average Queue Wait (ms)": round(
+                self.average_wait_time(),
+                2
+            )
+        }

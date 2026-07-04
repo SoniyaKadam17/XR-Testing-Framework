@@ -9,6 +9,8 @@ from user_behavior import UserBehavior
 from video_stream import VideoStream
 from metrics import Metrics
 from packet_generator import PacketGenerator
+from metrics_engine import MetricsEngine
+from metrics_logger import MetricsLogger
 
 
 # NEW COMPONENT 2 IMPORTS
@@ -37,6 +39,10 @@ behavior = UserBehavior()
 video = VideoStream()
 
 metrics = Metrics()
+
+metrics_engine = MetricsEngine()
+
+logger = MetricsLogger(metrics_engine)
 
 packet_generator = PacketGenerator()
 
@@ -161,6 +167,7 @@ async def xr_user(user_id):
 
 
         # Send packet through impairment engine
+        metrics_engine.record_packet_generated()
 
         processed_packet = network.process_packet(
             packet
@@ -171,6 +178,7 @@ async def xr_user(user_id):
         # Packet dropped
 
         if processed_packet is None:
+            metrics_engine.record_packet_dropped()
 
 
             continue
@@ -189,13 +197,30 @@ async def xr_user(user_id):
 
 
             metrics.increment_packets()
+            metrics_engine.record_packet_delivered()
             metrics.add_bytes(pkt["size"])
+            metrics_engine.record_bytes(pkt["size"])
             metrics.add_latency(pkt["actual_latency_ms"])
+            metrics_engine.record_latency(
+                pkt["actual_latency_ms"]
+            )
 
 
         # =================================================
         # COMPONENT 2 END
         # =================================================
+
+        # =====================================
+        # Component 3 - Queue Statistics
+        # =====================================
+
+        metrics_engine.record_queue_size(
+            network.packet_queue.size()
+        )
+
+        metrics_engine.record_queue_wait(
+            network.packet_queue.average_wait_time()
+        )
 
 
 
@@ -206,7 +231,11 @@ async def xr_user(user_id):
 
         metrics.increment_frames()
 
+        metrics_engine.record_frame()
+
         metrics.increment_events()
+
+        metrics_engine.record_event()
 
 
 
@@ -228,7 +257,8 @@ async def print_metrics():
     while True:
 
 
-        metrics.print_metrics()
+        #metrics.print_metrics()
+        logger.print_summary()
 
 
         print(
@@ -339,6 +369,10 @@ async def log_metrics():
 
 
             file.flush()
+            logger.save_report(
+                "../results/component3_metrics.csv",
+                "../results/component3_metrics.json"
+            )
 
 
             await asyncio.sleep(1)
