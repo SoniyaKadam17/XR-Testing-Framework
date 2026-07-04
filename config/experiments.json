@@ -1,0 +1,50 @@
+{
+    "experiment": {
+        "name": "XR Network Performance Evaluation",
+        "description": "Automated XR streaming experiments under varying network conditions",
+        "iterations": 1,
+        "duration_seconds": 10,
+        "output_directory": "results",
+        "save_logs": true,
+        "save_csv": true,
+        "save_json": false
+    },
+
+    "xr_workload": {
+        "profile": "medium",
+        "concurrent_users": 1,
+        "frame_rate": 90,
+        "resolution": "1920x1080"
+    },
+
+    "network_conditions": {
+        "latency_ms": [20, 50, 100],
+        "packet_loss_percent": [0, 1, 3, 5],
+        "jitter_ms": [0, 10, 20],
+        "bandwidth_mbps": [20, 50, 100]
+    },
+
+    "metrics": {
+        "collect": [
+            "frames_sent",
+            "events_generated",
+            "total_packets",
+            "delivered_packets",
+            "dropped_packets",
+            "packet_loss_percent",
+            "bandwidth_mbps",
+            "average_latency_ms",
+            "minimum_latency_ms",
+            "maximum_latency_ms",
+            "runtime_seconds"
+        ]
+    },
+
+    "logging": {
+        "console_output": true,
+        "progress_bar": true,
+        "experiment_summary": true
+    },
+
+    "random_seed": 42
+}
