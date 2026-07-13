@@ -290,7 +290,7 @@ class MetricsEngine:
     # Summary
     # ====================================
 
-    def summary(self):
+    def get_summary(self):
 
         return {
 

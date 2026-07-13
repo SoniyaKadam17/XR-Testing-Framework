@@ -5,5 +5,5 @@
     "bitrate_mbps": 50,
     "tracking_rate": 120,
     "packet_size": 2048,
-    "session_duration": 300
+    "session_duration": 5
 }

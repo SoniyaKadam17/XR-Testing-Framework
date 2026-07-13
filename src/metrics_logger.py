@@ -28,7 +28,7 @@ class MetricsLogger:
 
     def print_summary(self):
 
-        summary = self.metrics.summary()
+        summary = self.metrics.get_summary()
 
         print("\n========== METRICS COLLECTION ENGINE ==========\n")
 
@@ -76,7 +76,7 @@ class MetricsLogger:
 
     def write_csv(self, filename):
 
-        summary = self.metrics.summary()
+        summary = self.metrics.get_summary()
 
         file_exists = os.path.isfile(filename)
 
@@ -153,7 +153,7 @@ class MetricsLogger:
 
     def write_json(self, filename):
 
-        summary = self.metrics.summary()
+        summary = self.metrics.get_summary()
 
         with open(filename, "w") as file:
 

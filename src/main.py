@@ -2,20 +2,22 @@ import json
 import asyncio
 import csv
 import time
+from pathlib import Path
+PROFILE_DIR = Path("profiles")
 
 
-from tracking import TrackingSimulator
-from user_behavior import UserBehavior
-from video_stream import VideoStream
-from metrics import Metrics
-from packet_generator import PacketGenerator
-from metrics_engine import MetricsEngine
-from metrics_logger import MetricsLogger
+from src.tracking import TrackingSimulator
+from src.user_behavior import UserBehavior
+from src.video_stream import VideoStream
+from src.metrics import Metrics
+from src.packet_generator import PacketGenerator
+from src.metrics_engine import MetricsEngine
+from src.metrics_logger import MetricsLogger
 
 
 # NEW COMPONENT 2 IMPORTS
-from impairment_config import ImpairmentConfig
-from impairment_engine import NetworkImpairmentEngine
+from src.impairment_config import ImpairmentConfig
+from src.impairment_engine import NetworkImpairmentEngine
 
 
 
@@ -23,8 +25,17 @@ from impairment_engine import NetworkImpairmentEngine
 # Load XR Profile
 # ==========================================
 
-with open("../profiles/high_load.json") as file:
-    profile = json.load(file)
+def load_profile(profile_name="high_load.json"):
+
+    if not profile_name.endswith(".json"):
+        profile_name += ".json"
+
+
+    profile_path = PROFILE_DIR / profile_name
+
+
+    with open(profile_path, "r") as file:
+        return json.load(file)
 
 
 
@@ -51,25 +62,6 @@ packet_generator = PacketGenerator()
 # ==========================================
 # NETWORK IMPAIRMENT ENGINE
 # ==========================================
-
-
-network_config = ImpairmentConfig(
-
-    latency_ms=50,
-
-    jitter_ms=10,
-
-    packet_loss_rate=0.02,
-
-    bandwidth_mbps=50
-
-)
-
-
-network = NetworkImpairmentEngine(
-    network_config
-)
-
 
 
 # ==========================================
@@ -278,9 +270,13 @@ async def print_metrics():
 
 async def log_metrics():
 
+    results_dir = Path(__file__).resolve().parents[1] / "results"
+    results_dir.mkdir(exist_ok=True)
+
+    results_csv = results_dir / "results.csv"
 
     with open(
-        "../results/results.csv",
+        results_csv,
         "w",
         newline=""
     ) as file:
@@ -370,8 +366,8 @@ async def log_metrics():
 
             file.flush()
             logger.save_report(
-                "../results/component3_metrics.csv",
-                "../results/component3_metrics.json"
+                str(results_dir / "component3_metrics.csv"),
+                str(results_dir / "component3_metrics.json")
             )
 
 
@@ -384,81 +380,284 @@ async def log_metrics():
 # ==========================================
 # Main Traffic Scheduler
 # ==========================================
+import asyncio
+import time
+
+
+async def run_experiment(
+    profile_name="high_load.json",
+    latency_ms=50,
+    jitter_ms=10,
+    packet_loss_rate=0.02,
+    bandwidth_mbps=50,
+    duration_seconds=10
+):
+
+    global profile
+    global network
+    global metrics
+    global metrics_engine
+    global logger
+    global packet_generator
+
+
+    start_time = time.time()
+
+
+    # -----------------------------------------
+    # Reset all experiment-specific components
+    # -----------------------------------------
+
+    profile = load_profile(profile_name)
+    profile["session_duration"] = duration_seconds
+
+    metrics = Metrics()
+
+    metrics_engine = MetricsEngine()
+
+    logger = MetricsLogger(
+        metrics_engine
+    )
+
+    packet_generator = PacketGenerator()
+
+
+
+    # -----------------------------------------
+    # Store experiment configuration
+    # Required for Component 5/6
+    # -----------------------------------------
+
+    experiment_config = {
+
+        "profile": profile_name,
+
+        "latency_ms": latency_ms,
+
+        "jitter_ms": jitter_ms,
+
+        "packet_loss_rate": packet_loss_rate,
+
+        "bandwidth_mbps": bandwidth_mbps
+
+    }
+
+
+
+    # -----------------------------------------
+    # Create fresh Network Impairment Engine
+    # -----------------------------------------
+
+    network_config = ImpairmentConfig(
+
+        latency_ms=latency_ms,
+
+        jitter_ms=jitter_ms,
+
+        packet_loss_rate=packet_loss_rate,
+
+        bandwidth_mbps=bandwidth_mbps
+
+    )
+
+
+    network = NetworkImpairmentEngine(
+
+        network_config
+
+    )
+
+
+
+    # -----------------------------------------
+    # Run XR simulation
+    # -----------------------------------------
+
+    await main()
+
+
+
+    # -----------------------------------------
+    # Allow delayed packets to arrive
+    # -----------------------------------------
+
+    while network.packet_queue.size() > 0:
+
+        await asyncio.sleep(0.1)
+
+
+
+    # -----------------------------------------
+    # Collect remaining delivered packets
+    # -----------------------------------------
+
+    remaining_packets = (
+        network.get_delivered_packets()
+    )
+
+
+    for pkt in remaining_packets:
+
+
+        metrics.increment_packets()
+
+
+        metrics_engine.record_packet_delivered()
+
+
+
+        metrics.add_bytes(
+            pkt["size"]
+        )
+
+
+        metrics_engine.record_bytes(
+            pkt["size"]
+        )
+
+
+
+        if "actual_latency_ms" in pkt:
+
+
+            metrics.add_latency(
+                pkt["actual_latency_ms"]
+            )
+
+
+            metrics_engine.record_latency(
+                pkt["actual_latency_ms"]
+            )
+
+
+
+    # -----------------------------------------
+    # Generate final metrics summary
+    # -----------------------------------------
+
+    summary = metrics_engine.get_summary()
+
+
+
+    runtime = (
+        time.time() - start_time
+    )
+
+
+
+    # -----------------------------------------
+    # Return result
+    # Used by:
+    # Component 4 Controller
+    # Component 5 Analysis
+    # Component 6 Reporting
+    # -----------------------------------------
+
+    return {
+
+
+        "configuration": experiment_config,
+
+
+        "metrics": summary,
+
+
+        "runtime_seconds": runtime
+
+    }
+
+    # -----------------------------------------
+    # Finish metrics collection
+    # -----------------------------------------
+
+    metrics_engine.finish()
+
+    # -----------------------------------------
+    # Print summaries (keeps current behavior)
+    # -----------------------------------------
+
+    logger.print_summary()
+
+    network_stats = network.get_statistics()
+
+    print(network_stats)
+
+    # -----------------------------------------
+    # Return everything needed by
+    # Experiment Controller
+    # -----------------------------------------
+
+    summary = metrics_engine.get_summary()
+
+    return {
+        "experiment_profile": profile["name"],
+        "latency_ms": latency_ms,
+        "jitter_ms": jitter_ms,
+        "packet_loss_percent": packet_loss_rate * 100,
+        "bandwidth_mbps": bandwidth_mbps,
+        **network_stats,
+        **summary
+    }
 
 async def main():
 
-
     print("\n========== XR WORKLOAD ==========")
 
+    print(f"Profile: {profile['name']}")
+    print(f"Users: {profile['users']}")
+    print(f"FPS: {profile['fps']}")
+    print(f"Packet Size: {profile['packet_size']} bytes")
 
-    print(
-        f"Profile: {profile['name']}"
-    )
+    print("=================================\n")
 
-
-    print(
-        f"Users: {profile['users']}"
-    )
-
-
-    print(
-        f"FPS: {profile['fps']}"
-    )
-
-
-    print(
-        f"Packet Size: {profile['packet_size']} bytes"
-    )
-
-
-    print(
-        "=================================\n"
-    )
-
-
-
-    tasks = []
-
-
-
-    for user_id in range(
-        profile["users"]
-    ):
-
-
-        tasks.append(
-
-            asyncio.create_task(
-                xr_user(user_id)
-            )
-
-        )
-
-
-
-    tasks.append(
+    # XR user tasks
+    user_tasks = [
 
         asyncio.create_task(
-            print_metrics()
+            xr_user(user_id)
         )
 
+        for user_id in range(profile["users"])
+
+    ]
+
+    # Background tasks
+    metrics_task = asyncio.create_task(
+        print_metrics()
     )
 
-
-
-    tasks.append(
-
-        asyncio.create_task(
-            log_metrics()
-        )
-
+    logging_task = asyncio.create_task(
+        log_metrics()
     )
 
+    # Wait only for XR users to finish
+    await asyncio.gather(*user_tasks)
+    # Allow remaining delayed packets to arrive
+    await asyncio.sleep(1)
 
+    remaining_packets = network.get_delivered_packets()
 
-    await asyncio.gather(
-        *tasks
-    )
+    for pkt in remaining_packets:
+        metrics.increment_packets()
+        metrics_engine.record_packet_delivered()
+        metrics.add_bytes(pkt["size"])
+        metrics_engine.record_bytes(pkt["size"])
+        metrics.add_latency(pkt["actual_latency_ms"])
+        metrics_engine.record_latency(pkt["actual_latency_ms"])
+
+    # Stop background tasks
+    metrics_task.cancel()
+    logging_task.cancel()
+
+    try:
+        await metrics_task
+    except asyncio.CancelledError:
+        pass
+
+    try:
+        await logging_task
+    except asyncio.CancelledError:
+        pass
 
 
 
@@ -469,15 +668,10 @@ async def main():
 
 if __name__ == "__main__":
 
-
     try:
-
-        asyncio.run(main())
-
+        asyncio.run(
+            run_experiment()
+        )
 
     except KeyboardInterrupt:
-
-
-        print(
-            "\nSimulation stopped."
-        )
+        print("\nSimulation stopped.")

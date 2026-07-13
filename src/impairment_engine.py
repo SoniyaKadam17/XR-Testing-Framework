@@ -15,7 +15,7 @@ and sends it back to metrics.
 import random
 import time
 
-from packet_queue import PacketQueue
+from src.packet_queue import PacketQueue
 
 
 

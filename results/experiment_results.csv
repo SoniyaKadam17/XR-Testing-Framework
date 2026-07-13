@@ -1,0 +1,4 @@
+Experiment ID,Profile,Latency(ms),Loss(%),Jitter(ms),Bandwidth(Mbps),Packets,Dropped,Packet Loss %,Average Latency,Throughput
+1,medium_load,20,0.0,0,20,25200,0,0.0,20.0,18.701
+2,medium_load,20,0.0,0,50,25500,0,0.0,20.0,18.9
+3,medium_load,20,0.0,0,100,24050,0,0.0,20.0,17.837

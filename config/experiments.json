@@ -11,7 +11,7 @@
     },
 
     "xr_workload": {
-        "profile": "medium",
+        "profile": "medium_load",
         "concurrent_users": 1,
         "frame_rate": 90,
         "resolution": "1920x1080"

@@ -1,0 +1,131 @@
+[
+    {
+        "experiment_id": 1,
+        "configuration": {
+            "experiment_id": 1,
+            "profile": "medium_load",
+            "latency_ms": 20,
+            "packet_loss_rate": 0.0,
+            "packet_loss_percent": 0,
+            "jitter_ms": 0,
+            "bandwidth_mbps": 20
+        },
+        "metrics": {
+            "configuration": {
+                "profile": "medium_load",
+                "latency_ms": 20,
+                "jitter_ms": 0,
+                "packet_loss_rate": 0.0,
+                "bandwidth_mbps": 20
+            },
+            "metrics": {
+                "Frames Sent": 25200,
+                "Events Generated": 25200,
+                "Total Packets": 25200,
+                "Delivered Packets": 25200,
+                "Dropped Packets": 0,
+                "Packet Loss %": 0.0,
+                "Delivery Ratio %": 100.0,
+                "Bytes Sent": 25804800,
+                "Average Latency": 20.0,
+                "Minimum Latency": 20.0,
+                "Maximum Latency": 20.0,
+                "Average Jitter": 0.0,
+                "Average Queue Size": 51.04,
+                "Maximum Queue Size": 54,
+                "Average Queue Wait": 20.2,
+                "Throughput": 18.701,
+                "Runtime": 11.04
+            },
+            "runtime_seconds": 11.03894305229187
+        },
+        "runtime_seconds": 11.039025,
+        "timestamp": "2026-07-12 22:21:15.974364"
+    },
+    {
+        "experiment_id": 2,
+        "configuration": {
+            "experiment_id": 2,
+            "profile": "medium_load",
+            "latency_ms": 20,
+            "packet_loss_rate": 0.0,
+            "packet_loss_percent": 0,
+            "jitter_ms": 0,
+            "bandwidth_mbps": 50
+        },
+        "metrics": {
+            "configuration": {
+                "profile": "medium_load",
+                "latency_ms": 20,
+                "jitter_ms": 0,
+                "packet_loss_rate": 0.0,
+                "bandwidth_mbps": 50
+            },
+            "metrics": {
+                "Frames Sent": 25500,
+                "Events Generated": 25500,
+                "Total Packets": 25500,
+                "Delivered Packets": 25500,
+                "Dropped Packets": 0,
+                "Packet Loss %": 0.0,
+                "Delivery Ratio %": 100.0,
+                "Bytes Sent": 26112000,
+                "Average Latency": 20.0,
+                "Minimum Latency": 20.0,
+                "Maximum Latency": 20.0,
+                "Average Jitter": 0.0,
+                "Average Queue Size": 51.42,
+                "Maximum Queue Size": 54,
+                "Average Queue Wait": 20.17,
+                "Throughput": 18.9,
+                "Runtime": 11.05
+            },
+            "runtime_seconds": 11.05404019355774
+        },
+        "runtime_seconds": 11.054063,
+        "timestamp": "2026-07-12 22:21:27.028550"
+    },
+    {
+        "experiment_id": 3,
+        "configuration": {
+            "experiment_id": 3,
+            "profile": "medium_load",
+            "latency_ms": 20,
+            "packet_loss_rate": 0.0,
+            "packet_loss_percent": 0,
+            "jitter_ms": 0,
+            "bandwidth_mbps": 100
+        },
+        "metrics": {
+            "configuration": {
+                "profile": "medium_load",
+                "latency_ms": 20,
+                "jitter_ms": 0,
+                "packet_loss_rate": 0.0,
+                "bandwidth_mbps": 100
+            },
+            "metrics": {
+                "Frames Sent": 24050,
+                "Events Generated": 24050,
+                "Total Packets": 24050,
+                "Delivered Packets": 24050,
+                "Dropped Packets": 0,
+                "Packet Loss %": 0.0,
+                "Delivery Ratio %": 100.0,
+                "Bytes Sent": 24627200,
+                "Average Latency": 20.0,
+                "Minimum Latency": 20.0,
+                "Maximum Latency": 20.0,
+                "Average Jitter": 0.0,
+                "Average Queue Size": 49.96,
+                "Maximum Queue Size": 54,
+                "Average Queue Wait": 20.24,
+                "Throughput": 17.837,
+                "Runtime": 11.05
+            },
+            "runtime_seconds": 11.046761989593506
+        },
+        "runtime_seconds": 11.046785,
+        "timestamp": "2026-07-12 22:21:38.075423"
+    }
+]

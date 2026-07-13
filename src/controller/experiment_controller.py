@@ -1,130 +1,369 @@
+"""
+Experiment Controller
+Component 4
+
+Responsible for:
+- Loading experiment configurations
+- Generating experiment scenarios
+- Executing XR simulations
+- Collecting metrics
+- Saving results for:
+    Component 5: Data Analysis
+    Component 6: Reporting Engine
+"""
+
+import os
 import json
-from pathlib import Path
-from itertools import product
+import csv
+import asyncio
+from datetime import datetime
+
+
+# Existing project imports
+from src.main import run_experiment
+from src.metrics_engine import MetricsEngine
+
+
+CONFIG_PATH = "config/experiments.json"
+
+RESULT_DIR = "results"
+
+RESULT_JSON = os.path.join(
+    RESULT_DIR,
+    "experiment_results.json"
+)
+
+RESULT_CSV = os.path.join(
+    RESULT_DIR,
+    "experiment_results.csv"
+)
+
 
 
 class ExperimentController:
-    """
-    Controls the execution of XR network experiments.
-    """
+
 
     def __init__(self):
-        # Project root directory
-        self.project_root = Path(__file__).resolve().parents[2]
 
-        # Configuration file
-        self.config_path = self.project_root / "config" / "experiments.json"
-
-        self.config = {}
         self.experiments = []
 
-    def load_configuration(self):
-        """
-        Load experiment configuration from JSON.
-        """
+        self.results = []
 
-        print(f"Loading configuration from:\n{self.config_path}\n")
+        os.makedirs(
+            RESULT_DIR,
+            exist_ok=True
+        )
 
-        if not self.config_path.exists():
-            raise FileNotFoundError(
-                f"Configuration file not found:\n{self.config_path}"
-            )
 
-        with open(self.config_path, "r") as file:
-            self.config = json.load(file)
+    # ---------------------------------
+    # Load experiment configuration
+    # ---------------------------------
 
-        print("✓ Configuration loaded successfully.")
+    def load_config(self):
 
-    def validate_configuration(self):
-        """
-        Validate required configuration sections.
-        """
+        print("\nLoading experiment configuration...")
 
-        required_sections = [
-            "experiment",
-            "xr_workload",
-            "network_conditions",
-            "metrics",
-            "logging"
-        ]
+        with open(CONFIG_PATH,"r") as file:
 
-        for section in required_sections:
-            if section not in self.config:
-                raise ValueError(
-                    f"Missing configuration section: {section}"
-                )
+            config=json.load(file)
 
-        print("✓ Configuration validated.")
 
-    def generate_experiments(self):
-        """
-        Generate all experiment combinations.
-        """
+        self.generate_experiments(config)
 
-        network = self.config["network_conditions"]
 
-        latencies = network["latency_ms"]
-        losses = network["packet_loss_percent"]
-        jitters = network["jitter_ms"]
-        bandwidths = network["bandwidth_mbps"]
+        print(
+            f"Generated {len(self.experiments)} experiments"
+        )
+
+
+
+    # ---------------------------------
+    # Generate experiment combinations
+    # ---------------------------------
+
+    def generate_experiments(self, config):
+
+
+        profile = config["xr_workload"]["profile"]
+
+
+        latencies = config["network_conditions"]["latency_ms"]
+
+        losses = config["network_conditions"]["packet_loss_percent"]
+
+        jitters = config["network_conditions"]["jitter_ms"]
+
+        bandwidths = config["network_conditions"]["bandwidth_mbps"]
+
 
         experiment_id = 1
 
-        for latency, loss, jitter, bandwidth in product(
-            latencies,
-            losses,
-            jitters,
-            bandwidths
-        ):
 
-            self.experiments.append(
-                {
-                    "experiment_id": experiment_id,
-                    "latency_ms": latency,
-                    "packet_loss_percent": loss,
-                    "jitter_ms": jitter,
-                    "bandwidth_mbps": bandwidth,
-                }
-            )
+        for latency in latencies:
 
-            experiment_id += 1
+            for loss in losses:
 
-        print(f"✓ Generated {len(self.experiments)} experiments.")
+                for jitter in jitters:
 
-    def show_experiment_plan(self):
-        """
-        Display experiment plan.
-        """
+                    for bandwidth in bandwidths:
 
-        print("\nExperiment Plan")
-        print("-" * 80)
 
-        for experiment in self.experiments:
+                        experiment = {
+
+                            "experiment_id": experiment_id,
+
+                            "profile": profile,
+
+                            "latency_ms": latency,
+
+                            "packet_loss_rate": loss / 100,
+
+                            "packet_loss_percent": loss,
+
+                            "jitter_ms": jitter,
+
+                            "bandwidth_mbps": bandwidth
+
+                        }
+
+
+                        self.experiments.append(
+                            experiment
+                        )
+
+
+                        experiment_id += 1
+
+
+    # ---------------------------------
+    # Execute experiments
+    # ---------------------------------
+
+    async def run_all(self):
+
+
+        print(
+            "\n========== EXPERIMENT EXECUTION =========="
+        )
+
+
+        for experiment in self.experiments[:3]:
+
 
             print(
-                f"Experiment {experiment['experiment_id']:3d} | "
-                f"Latency={experiment['latency_ms']:3d} ms | "
-                f"Loss={experiment['packet_loss_percent']:2d}% | "
-                f"Jitter={experiment['jitter_ms']:2d} ms | "
-                f"Bandwidth={experiment['bandwidth_mbps']:3d} Mbps"
+                f"\nRunning Experiment "
+                f"{experiment['experiment_id']}"
             )
 
-        print("-" * 80)
-        print(f"Total Experiments: {len(self.experiments)}")
+
+            result = await self.run_single(
+                experiment
+            )
 
 
-def main():
+            self.results.append(result)
+
+
+
+        self.save_results()
+
+
+
+    # ---------------------------------
+    # Run single experiment
+    # ---------------------------------
+
+    async def run_single(
+            self,
+            experiment
+    ):
+
+
+        start_time=datetime.now()
+
+
+        metrics = await run_experiment(
+
+            profile_name=experiment["profile"],
+            latency_ms=experiment["latency_ms"],
+            jitter_ms=experiment["jitter_ms"],
+            packet_loss_rate=experiment["packet_loss_rate"],
+            bandwidth_mbps=experiment["bandwidth_mbps"],
+            duration_seconds=10
+
+        )
+
+
+        end_time=datetime.now()
+
+
+        result={
+
+            "experiment_id":
+                experiment["experiment_id"],
+
+            "configuration":
+                experiment,
+
+
+            "metrics":
+                metrics,
+
+
+            "runtime_seconds":
+                (
+                    end_time-start_time
+                ).total_seconds(),
+
+
+            "timestamp":
+                str(datetime.now())
+
+        }
+
+
+        return result
+
+
+
+    # ---------------------------------
+    # Save results
+    # Needed by Component 5/6
+    # ---------------------------------
+
+    def save_results(self):
+
+
+        print(
+            "\nSaving experiment results..."
+        )
+
+
+        # JSON
+
+        with open(
+            RESULT_JSON,
+            "w"
+        ) as file:
+
+            json.dump(
+                self.results,
+                file,
+                indent=4
+            )
+
+
+
+        # CSV
+
+        with open(
+            RESULT_CSV,
+            "w",
+            newline=""
+        ) as file:
+
+
+            writer=csv.writer(file)
+
+
+            writer.writerow(
+                [
+
+                "Experiment ID",
+                "Profile",
+                "Latency(ms)",
+                "Loss(%)",
+                "Jitter(ms)",
+                "Bandwidth(Mbps)",
+                "Packets",
+                "Dropped",
+                "Packet Loss %",
+                "Average Latency",
+                "Throughput"
+
+                ]
+            )
+
+
+
+            for r in self.results:
+
+
+                cfg=r["configuration"]
+
+                m = r["metrics"]["metrics"]
+
+
+                writer.writerow(
+                    [
+
+                    r["experiment_id"],
+
+                    cfg["profile"],
+
+                    cfg["latency_ms"],
+
+                    cfg["packet_loss_rate"],
+
+                    cfg["jitter_ms"],
+
+                    cfg["bandwidth_mbps"],
+
+                    m.get(
+                        "Total Packets"
+                    ),
+
+                    m.get(
+                        "Dropped Packets"
+                    ),
+
+                    m.get(
+                        "Packet Loss %"
+                    ),
+
+                    m.get(
+                        "Average Latency"
+                    ),
+
+                    m.get(
+                        "Throughput"
+                    )
+
+                    ]
+                )
+
+
+
+        print(
+            "Results saved:"
+        )
+
+        print(
+            RESULT_JSON
+        )
+
+        print(
+            RESULT_CSV
+        )
+
+
+
+
+
+async def main():
+
 
     controller = ExperimentController()
 
-    controller.load_configuration()
 
-    controller.validate_configuration()
-
-    controller.generate_experiments()
-
-    controller.show_experiment_plan()
+    controller.load_config()
 
 
-if __name__ == "__main__":
-    main()
+    await controller.run_all()
+
+
+
+if __name__=="__main__":
+
+
+    asyncio.run(main())
