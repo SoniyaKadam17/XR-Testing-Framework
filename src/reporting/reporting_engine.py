@@ -97,73 +97,43 @@ class ReportingEngine:
     def generate_graphs(self):
 
         self.save_plot(
-
-            self.df["Latency"],
-
+            self.df["Latency(ms)"],
             self.df["Average Latency"],
-
             "Configured Latency (ms)",
-
             "Measured Latency (ms)",
-
             "latency.png"
-
         )
 
         self.save_plot(
-
-            self.df["Latency"],
-
+            self.df["Latency(ms)"],
             self.df["Throughput"],
-
             "Configured Latency (ms)",
-
             "Throughput (Mbps)",
-
             "throughput.png"
-
         )
 
         self.save_plot(
-
-            self.df["Latency"],
-
-            self.df["Average Queue Size"],
-
+            self.df["Latency(ms)"],
+            self.df["Packet Loss %"],
             "Configured Latency (ms)",
-
-            "Queue Size",
-
-            "queue_size.png"
-
+            "Packet Loss (%)",
+            "packet_loss.png"
         )
 
         self.save_plot(
-
-            self.df["Latency"],
-
-            self.df["Average Queue Wait"],
-
-            "Configured Latency (ms)",
-
-            "Queue Wait (ms)",
-
-            "queue_wait.png"
-
+            self.df["Bandwidth(Mbps)"],
+            self.df["Throughput"],
+            "Bandwidth (Mbps)",
+            "Throughput (Mbps)",
+            "bandwidth.png"
         )
 
         self.save_plot(
-
-            self.df["Latency"],
-
-            self.df["Average Jitter"],
-
-            "Configured Latency (ms)",
-
-            "Average Jitter (ms)",
-
-            "jitter.png"
-
+            self.df["Experiment ID"] if "Experiment ID" in self.df.columns else range(1, len(self.df)+1),
+            self.df["Throughput"],
+            "Experiment",
+            "Throughput (Mbps)",
+            "comparison.png"
         )
 
     ####################################################
@@ -239,52 +209,56 @@ class ReportingEngine:
 
             "throughput.png",
 
-            "queue_size.png",
+            "packet_loss.png",
 
-            "queue_wait.png",
+            "bandwidth.png",
 
-            "jitter.png"
+            "comparison.png"
 
         ]
 
         for img in images:
 
-            story.append(
 
-                Paragraph(
+                titles = {
+                    "latency.png": "Latency Analysis",
+                    "throughput.png": "Throughput Analysis",
+                    "packet_loss.png": "Packet Loss Analysis",
+                    "bandwidth.png": "Bandwidth vs Throughput",
+                    "comparison.png": "Experiment Comparison"
+                }
 
-                    img.replace(".png", ""),
+                story.append(
+                    Paragraph(
+                        titles[img],
+                        styles["Heading2"]
+                    )
+                )
 
-                    styles["Heading2"]
+                story.append(
+                    Spacer(1, 10)
+                )
+
+                story.append(
+
+                    Image(
+
+                        str(
+                            self.report_dir
+                            / img
+                        ),
+
+                        width=420,
+
+                        height=260
+
+                    )
 
                 )
 
-            )
-
-            story.append(
-                Spacer(1, 10)
-            )
-
-            story.append(
-
-                Image(
-
-                    str(
-                        self.report_dir
-                        / img
-                    ),
-
-                    width=420,
-
-                    height=260
-
+                story.append(
+                    Spacer(1, 20)
                 )
-
-            )
-
-            story.append(
-                Spacer(1, 20)
-            )
 
         pdf.build(story)
 

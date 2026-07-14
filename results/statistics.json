@@ -1,0 +1,9 @@
+{
+    "Total Experiments": 3,
+    "Average Latency (ms)": 20.0,
+    "Minimum Latency (ms)": 20.0,
+    "Maximum Latency (ms)": 20.0,
+    "Average Packet Loss (%)": 0.0,
+    "Average Throughput (Mbps)": 17.94,
+    "Average Runtime (s)": 11.05
+}

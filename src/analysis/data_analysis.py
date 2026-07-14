@@ -69,18 +69,12 @@ class DataAnalysis:
                 self.df["Throughput"].mean(), 2
             ),
 
-            "Average Queue Size": round(
-                self.df["Average Queue Size"].mean(), 2
-            ),
-
-            "Average Queue Wait (ms)": round(
-                self.df["Average Queue Wait"].mean(), 2
-            ),
-
-            "Average Jitter (ms)": round(
-                self.df["Average Jitter"].mean(), 2
+            "Average Runtime (s)": round(
+                self.df["Runtime(s)"].mean(), 2
             )
+
         }
+
 
         return stats
 
@@ -103,41 +97,26 @@ class DataAnalysis:
     def create_summary(self):
 
         summary = self.df.groupby(
-
             [
-
                 "Latency(ms)",
                 "Loss(%)",
                 "Jitter(ms)",
                 "Bandwidth(Mbps)"
-
             ]
-
         ).agg(
-
             {
-
                 "Average Latency": "mean",
-
                 "Throughput": "mean",
-
-                "Average Queue Size": "mean",
-
-                "Average Queue Wait": "mean",
-
-                "Average Jitter": "mean"
-
+                "Packet Loss %": "mean",
+             "Packets": "mean",
+                "Runtime(s)": "mean"
             }
-
         ).reset_index()
 
         summary.to_csv(
-
             self.summary_file,
-
             index=False
-
-        )
+     )
 
         print("analysis_summary.csv created.")
 

@@ -266,9 +266,7 @@ class ExperimentController:
             writer=csv.writer(file)
 
 
-            writer.writerow(
-                [
-
+            writer.writerow([
                 "Experiment ID",
                 "Profile",
                 "Latency(ms)",
@@ -279,10 +277,9 @@ class ExperimentController:
                 "Dropped",
                 "Packet Loss %",
                 "Average Latency",
-                "Throughput"
-
-                ]
-            )
+                "Throughput",
+                "Runtime(s)"
+            ])
 
 
 
@@ -296,41 +293,19 @@ class ExperimentController:
 
                 writer.writerow(
                     [
-
-                    r["experiment_id"],
-
-                    cfg["profile"],
-
-                    cfg["latency_ms"],
-
-                    cfg["packet_loss_rate"],
-
-                    cfg["jitter_ms"],
-
-                    cfg["bandwidth_mbps"],
-
-                    m.get(
-                        "Total Packets"
-                    ),
-
-                    m.get(
-                        "Dropped Packets"
-                    ),
-
-                    m.get(
-                        "Packet Loss %"
-                    ),
-
-                    m.get(
-                        "Average Latency"
-                    ),
-
-                    m.get(
-                        "Throughput"
-                    )
-
-                    ]
-                )
+                        r["experiment_id"],
+                        cfg["profile"],
+                        cfg["latency_ms"],
+                        cfg["packet_loss_rate"],
+                        cfg["jitter_ms"],
+                        cfg["bandwidth_mbps"],
+                        m.get("Total Packets"),
+                        m.get("Dropped Packets"),
+                        m.get("Packet Loss %"),
+                        m.get("Average Latency"),
+                        m.get("Throughput"),
+                        r["runtime_seconds"]
+                    ])
 
 
 
